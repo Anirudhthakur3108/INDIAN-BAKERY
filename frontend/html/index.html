@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rajwadi Oven | Indian Bakery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="Bakery home">
+          <span class="brand-badge" data-template="brand-initials">RO</span>
+          <span class="brand-text" data-template="brand-name">Rajwadi Oven</span>
+        </a>
+        <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="main-nav" aria-label="Toggle menu">Menu</button>
+        <nav>
+          <ul class="nav-menu" id="main-nav" data-nav-menu>
+            <li><a class="nav-link active" href="index.html">Home</a></li>
+            <li><a class="nav-link" href="menu.html">Menu</a></li>
+            <li><a class="nav-link" href="contact.html">Contact</a></li>
+            <li><a class="nav-link" href="order.html">Order</a></li>
+            <li><a class="nav-link" href="admin.html">Admin</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="container">
+        <section class="hero">
+          <article class="hero-panel reveal">
+            <span class="pill">Fresh Daily | Roz taza bakes</span>
+            <h1 data-template="hero-tagline">From Oven to Dil, <br />authentic Indian bakery vibes.</h1>
+            <p class="lead">
+              Rajwadi Oven brings handcrafted breads, mithai-inspired pastries, and celebration cakes made with desi flavor profiles.
+              Taste mein tradition, presentation mein modern cafe feel.
+            </p>
+            <div class="button-row">
+              <a class="btn btn-primary" href="order.html">Order Now</a>
+              <a class="btn btn-secondary" href="menu.html">Explore Menu</a>
+            </div>
+          </article>
+          <aside class="hero-media reveal delay-1" aria-label="Bakery showcase">
+            <div class="hero-media-art"></div>
+            <div class="hero-stats">
+              <div class="stat">
+                <strong>4.8/5</strong>
+                <div class="muted">Customer Love</div>
+              </div>
+              <div class="stat">
+                <strong>80+</strong>
+                <div class="muted">Daily Bakes</div>
+              </div>
+              <div class="stat">
+                <strong>Since 2021</strong>
+                <div class="muted"><span data-template="city">Bhopal</span> Studio</div>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <h2>Featured Favorites</h2>
+            <a class="muted" href="menu.html">See full menu</a>
+          </div>
+          <div class="grid grid-3">
+            <article class="card reveal delay-1">
+              <h3>Elaichi Milk Cake Slice</h3>
+              <p>Soft sponge with cardamom cream and pista crumble. Ekdum shaadi dessert feel.</p>
+              <p class="price">INR 180</p>
+            </article>
+            <article class="card reveal delay-2">
+              <h3>Masala Chai Croissant</h3>
+              <p>Buttery layers infused with chai masala, ginger glaze, and almond dust.</p>
+              <p class="price">INR 140</p>
+            </article>
+            <article class="card reveal delay-3">
+              <h3>Gur Walnut Tea Cake</h3>
+              <p>Jaggery sweetness with toasted walnuts. Perfect with evening chai.</p>
+              <p class="price">INR 220</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section grid grid-2">
+          <article class="card reveal">
+            <h2>Our Story | Hamari Kahani</h2>
+            <p>
+              Started as a small family kitchen concept, Rajwadi Oven blends local ingredients with modern pastry craft.
+              We focus on clean flavors, low-waste baking, and festive menus inspired by Indian seasons.
+            </p>
+            <a class="btn btn-secondary" href="contact.html">Visit Our Bakery</a>
+          </article>
+          <article class="card reveal delay-1" data-feature="custom-orders-card">
+            <h2>Need Custom Orders?</h2>
+            <p>
+              Birthdays, office events, and gifting hampers ke liye custom menu available hai. Advance booking recommended for fondant and tiered cakes.
+            </p>
+            <a class="btn btn-primary" href="order.html">Start Your Order</a>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-wrap">
+        <small><span data-template="brand-name">Rajwadi Oven</span> Bakery | Fresh Bakes, Warm Hearts</small>
+        <small>Open 8:00 AM - 10:00 PM | Mon-Sun</small>
+      </div>
+    </footer>
+
+    <script src="../js/template-config.js"></script>
+    <script src="../js/script.js"></script>
+  </body>
+</html>

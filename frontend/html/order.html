@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin | Rajwadi Oven</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="Bakery home">
+          <span class="brand-badge" data-template="brand-initials">RO</span>
+          <span class="brand-text" data-template="brand-name">Rajwadi Oven</span>
+        </a>
+        <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="main-nav" aria-label="Toggle menu">Menu</button>
+        <nav>
+          <ul class="nav-menu" id="main-nav" data-nav-menu>
+            <li><a class="nav-link" href="index.html">Home</a></li>
+            <li><a class="nav-link" href="menu.html">Menu</a></li>
+            <li><a class="nav-link" href="contact.html">Contact</a></li>
+            <li><a class="nav-link" href="order.html">Order</a></li>
+            <li><a class="nav-link active" href="admin.html">Admin</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="container">
+        <section class="section card" data-admin-login-panel>
+          <h1>Admin Login</h1>
+          <p class="muted">Default credentials: <code>admin</code> / <code>admin123</code> (change in backend for production).</p>
+          <form class="form admin-login-form" data-admin-login-form>
+            <label>
+              Username
+              <input type="text" name="username" value="admin" required />
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" value="admin123" required />
+            </label>
+            <div class="button-row">
+              <button class="btn btn-primary" type="submit">Login</button>
+            </div>
+            <p class="form-status" data-admin-auth-status aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="section" data-admin-dashboard hidden>
+          <div class="card">
+            <div class="section-header">
+              <h2>Admin Dashboard</h2>
+              <button class="btn btn-secondary" type="button" data-admin-logout>Logout</button>
+            </div>
+          </div>
+
+          <section class="section card">
+            <h3>Add Menu Item</h3>
+            <form class="form" data-admin-add-item-form>
+              <div class="form-grid">
+                <label>
+                  Item Name
+                  <input type="text" name="name" required />
+                </label>
+                <label>
+                  Category
+                  <input type="text" name="category" placeholder="Cakes & Pastries" required />
+                </label>
+                <label>
+                  Price (INR)
+                  <input type="number" name="price" min="0" step="1" required />
+                </label>
+                <label>
+                  Availability
+                  <select name="isAvailable">
+                    <option value="true">Available</option>
+                    <option value="false">Unavailable</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                Description
+                <textarea name="description" rows="3" required></textarea>
+              </label>
+              <div class="button-row">
+                <button class="btn btn-primary" type="submit">Add Menu Item</button>
+              </div>
+              <p class="form-status" data-admin-menu-status aria-live="polite"></p>
+            </form>
+          </section>
+
+          <section class="section card">
+            <div class="section-header">
+              <h3>Menu Items</h3>
+              <button class="btn btn-secondary" type="button" data-admin-refresh-menu>Refresh</button>
+            </div>
+            <div data-admin-menu-list class="admin-list"></div>
+          </section>
+
+          <section class="section card">
+            <div class="section-header">
+              <h3>Orders</h3>
+              <button class="btn btn-secondary" type="button" data-admin-refresh-orders>Refresh</button>
+            </div>
+            <div data-admin-orders-list class="admin-list"></div>
+          </section>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-wrap">
+        <small><span data-template="brand-name">Rajwadi Oven</span> Admin Panel</small>
+        <small>Secure Operations</small>
+      </div>
+    </footer>
+
+    <script src="../js/template-config.js"></script>
+    <script src="../js/script.js"></script>
+    <script src="../js/admin.js"></script>
+  </body>
+</html>

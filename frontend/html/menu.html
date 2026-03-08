@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Menu | Rajwadi Oven</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="Bakery home">
+          <span class="brand-badge" data-template="brand-initials">RO</span>
+          <span class="brand-text" data-template="brand-name">Rajwadi Oven</span>
+        </a>
+        <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="main-nav" aria-label="Toggle menu">Menu</button>
+        <nav>
+          <ul class="nav-menu" id="main-nav" data-nav-menu>
+            <li><a class="nav-link" href="index.html">Home</a></li>
+            <li><a class="nav-link active" href="menu.html">Menu</a></li>
+            <li><a class="nav-link" href="contact.html">Contact</a></li>
+            <li><a class="nav-link" href="order.html">Order</a></li>
+            <li><a class="nav-link" href="admin.html">Admin</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="container">
+        <section class="section">
+          <span class="pill">Chef Specials | Limited Batches</span>
+          <h1>Bakery Menu</h1>
+          <p class="lead">Classic breads se lekar mithai-fusion desserts tak, sab kuch fresh aur small-batch style mein.</p>
+        </section>
+
+        <section class="section card" data-menu-order-builder>
+          <h2>Build Your Order</h2>
+          <p>Select items directly from this page, then move to order form with selected items.</p>
+          <ul class="order-builder-list" data-order-builder-list>
+            <li class="muted">No items selected yet.</li>
+          </ul>
+          <div class="button-row">
+            <a class="btn btn-primary" href="order.html" data-proceed-order aria-disabled="true">Proceed to Order Page</a>
+            <button class="btn btn-secondary" type="button" data-clear-order>Clear Selection</button>
+          </div>
+        </section>
+
+        <div data-menu-sections></div>
+
+        <section class="section card">
+          <h2>Quick Order</h2>
+          <p>Apko jo pasand aaye, direct order page pe select karke booking bhej do.</p>
+          <a class="btn btn-primary" href="order.html">Go to Order Form</a>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-wrap">
+        <small><span data-template="brand-name">Rajwadi Oven</span> Bakery</small>
+        <small>Bulk and event orders available</small>
+      </div>
+    </footer>
+
+    <script src="../js/template-config.js"></script>
+    <script src="../js/script.js"></script>
+  </body>
+</html>
