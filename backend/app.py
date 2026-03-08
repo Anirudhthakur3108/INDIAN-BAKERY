@@ -176,6 +176,15 @@ def root_redirect():
 def serve_frontend_file(filename: str):
     if filename not in PUBLIC_FILES:
         return jsonify({"error": "Not found"}), 404
+    
+    # Map files to their correct subdirectories
+    if filename.endswith('.html'):
+        return send_from_directory(FRONTEND_DIR / "frontend" / "html", filename)
+    elif filename.endswith('.css'):
+        return send_from_directory(FRONTEND_DIR / "frontend" / "css", filename)
+    elif filename.endswith('.js'):
+        return send_from_directory(FRONTEND_DIR / "frontend" / "js", filename)
+    
     return send_from_directory(FRONTEND_DIR, filename)
 
 

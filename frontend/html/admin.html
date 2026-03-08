@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Order | Rajwadi Oven</title>
+    <title>Admin | Rajwadi Oven</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
@@ -22,8 +22,8 @@
             <li><a class="nav-link" href="index.html">Home</a></li>
             <li><a class="nav-link" href="menu.html">Menu</a></li>
             <li><a class="nav-link" href="contact.html">Contact</a></li>
-            <li><a class="nav-link active" href="order.html">Order</a></li>
-            <li><a class="nav-link" href="admin.html">Admin</a></li>
+            <li><a class="nav-link" href="order.html">Order</a></li>
+            <li><a class="nav-link active" href="admin.html">Admin</a></li>
           </ul>
         </nav>
       </div>
@@ -31,122 +31,96 @@
 
     <main class="main">
       <div class="container">
-        <section class="section">
-          <span class="pill">Order Online | Fast response</span>
-          <h1>Place Your Bakery Order</h1>
-          <p class="lead">Details bhar do, and our team will confirm pricing and pickup/delivery slot shortly.</p>
+        <section class="section card" data-admin-login-panel>
+          <h1>Admin Login</h1>
+          <p class="muted">Default credentials: <code>admin</code> / <code>admin123</code> (change in backend for production).</p>
+          <form class="form admin-login-form" data-admin-login-form>
+            <label>
+              Username
+              <input type="text" name="username" value="admin" required />
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" value="admin123" required />
+            </label>
+            <div class="button-row">
+              <button class="btn btn-primary" type="submit">Login</button>
+            </div>
+            <p class="form-status" data-admin-auth-status aria-live="polite"></p>
+          </form>
         </section>
 
-        <section class="section card">
-          <form class="form" data-order-form data-api-endpoint="/api/orders" novalidate>
-            <div class="form-grid">
-              <label>
-                Full Name / Pura Naam
-                <input type="text" name="customerName" autocomplete="name" required />
-                <span class="field-error" data-error-for="customerName"></span>
-              </label>
+        <section class="section" data-admin-dashboard hidden>
+          <div class="card">
+            <div class="section-header">
+              <h2>Admin Dashboard</h2>
+              <button class="btn btn-secondary" type="button" data-admin-logout>Logout</button>
+            </div>
+          </div>
 
-              <label>
-                Phone Number
-                <input type="tel" name="phone" inputmode="numeric" maxlength="10" placeholder="10-digit number" required />
-                <span class="field-error" data-error-for="phone"></span>
-              </label>
-
-              <div class="full-width order-adder-wrap">
-                <h3>Add Items To Order</h3>
-                <div class="order-add-row">
-                  <label class="inline-field">
-                    Select Item
-                    <select name="item" data-order-items>
-                      <option value="">Choose one</option>
-                      <option>Elaichi Milk Cake Slice</option>
-                      <option>Masala Chai Croissant</option>
-                      <option>Rose Rasmalai Tres Leches</option>
-                      <option>Motichoor Cheesecake Jar</option>
-                      <option>Custom Celebration Cake</option>
-                    </select>
-                  </label>
-
-                  <label class="inline-field">
-                    Quantity
-                    <input type="number" name="quantity" min="1" max="50" value="1" data-item-qty />
-                  </label>
-
-                  <button class="btn btn-primary" type="button" data-add-order-item>Add Item</button>
-                </div>
-                <span class="field-error" data-error-for="orderItems"></span>
-              </div>
-
-              <div class="full-width order-cart">
-                <h3>Your Order Items</h3>
-                <p class="muted">Items: <strong data-order-summary-count>0</strong> | Estimated total: <strong data-order-summary-total>INR 0</strong></p>
-                <ul class="order-builder-list" data-selected-items-list>
-                  <li class="muted">No items added yet.</li>
-                </ul>
-              </div>
-
-              <label>
-                Pickup or Delivery?
-                <select name="orderType" data-order-type required>
-                  <option value="">Choose one</option>
-                  <option value="pickup">Pickup</option>
-                  <option value="delivery">Delivery</option>
-                </select>
-                <span class="field-error" data-error-for="orderType"></span>
-              </label>
-
-              <div class="full-width schedule-fields" data-schedule-fields hidden>
-                <div class="form-grid">
-                  <label>
-                    Pickup / Delivery Date
-                    <input type="date" name="pickupDate" data-date-input />
-                    <span class="field-error" data-error-for="pickupDate"></span>
-                  </label>
-
-                  <label>
-                    Preferred Slot
-                    <select name="slot" data-slot-input>
-                      <option value="">Choose one</option>
-                      <option>Morning (8 AM - 12 PM)</option>
-                      <option>Afternoon (12 PM - 4 PM)</option>
-                      <option>Evening (4 PM - 9 PM)</option>
-                    </select>
-                    <span class="field-error" data-error-for="slot"></span>
-                  </label>
-                </div>
-
-                <label class="full-width" data-delivery-address-field hidden>
-                  Delivery Address
-                  <textarea name="deliveryAddress" rows="3" placeholder="Flat / House no, area, landmark, city" data-delivery-address></textarea>
-                  <span class="field-error" data-error-for="deliveryAddress"></span>
+          <section class="section card">
+            <h3>Add Menu Item</h3>
+            <form class="form" data-admin-add-item-form>
+              <div class="form-grid">
+                <label>
+                  Item Name
+                  <input type="text" name="name" required />
+                </label>
+                <label>
+                  Category
+                  <input type="text" name="category" placeholder="Cakes & Pastries" required />
+                </label>
+                <label>
+                  Price (INR)
+                  <input type="number" name="price" min="0" step="1" required />
+                </label>
+                <label>
+                  Availability
+                  <select name="isAvailable">
+                    <option value="true">Available</option>
+                    <option value="false">Unavailable</option>
+                  </select>
                 </label>
               </div>
+              <label>
+                Description
+                <textarea name="description" rows="3" required></textarea>
+              </label>
+              <div class="button-row">
+                <button class="btn btn-primary" type="submit">Add Menu Item</button>
+              </div>
+              <p class="form-status" data-admin-menu-status aria-live="polite"></p>
+            </form>
+          </section>
+
+          <section class="section card">
+            <div class="section-header">
+              <h3>Menu Items</h3>
+              <button class="btn btn-secondary" type="button" data-admin-refresh-menu>Refresh</button>
             </div>
+            <div data-admin-menu-list class="admin-list"></div>
+          </section>
 
-            <label>
-              Notes (eggless, message text, delivery instructions)
-              <textarea name="notes" rows="4" placeholder="Type your special request"></textarea>
-            </label>
-
-            <div class="button-row">
-              <button class="btn btn-primary" type="submit">Submit Order</button>
-              <a class="btn btn-secondary" href="menu.html">Back to Menu</a>
+          <section class="section card">
+            <div class="section-header">
+              <h3>Orders</h3>
+              <button class="btn btn-secondary" type="button" data-admin-refresh-orders>Refresh</button>
             </div>
-
-            <p class="form-status" data-form-status aria-live="polite"></p>
-          </form>
+            <div data-admin-orders-list class="admin-list"></div>
+          </section>
         </section>
       </div>
     </main>
 
     <footer class="site-footer">
       <div class="container footer-wrap">
-        <small><span data-template="brand-name">Rajwadi Oven</span> Bakery</small>
-        <small>Order confirmations via call/WhatsApp</small>
+        <small><span data-template="brand-name">Rajwadi Oven</span> Admin Panel</small>
+        <small>Secure Operations</small>
       </div>
     </footer>
 
-    <script src="../js/template-config.js"></script>
-    <script src="../js/script.js"></script>
+    <script src="/template-config.js"></script>
+    <script src="/script.js"></script>
+    <script src="/admin.js"></script>
   </body>
 </html>
