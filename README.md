@@ -47,9 +47,9 @@ INDIAN BAKERY/
 │       └── template-config.js     # Bakery branding & offline fallback
 ├── backend/
 │   ├── app.py             # Flask API + database schema
-│   ├── requirements.txt    # Python dependencies (Flask, Werkzeug)
+│   ├── requirements.txt    # Python dependencies (Flask, psycopg, gunicorn)
 │   ├── README.md          # Backend setup instructions
-│   └── bakery.db          # SQLite database (auto-created)
+│   └── app.py             # PostgreSQL-backed Flask APIs
 └── README.md              # This file
 ```
 
@@ -75,7 +75,7 @@ INDIAN BAKERY/
 
 ### Backend
 - ✅ RESTful JSON APIs
-- 🗄️ SQLite database with schema auto-initialization
+- 🗄️ PostgreSQL database with schema auto-initialization
 - 🔒 Password hashing (Werkzeug)
 - 📸 Price snapshots (prevents price tampering)
 - 🌍 CORS-friendly (ready for external apps)
@@ -128,8 +128,8 @@ Edit `backend/app.py` and update `ensure_tables()` function:
 
 ```python
 cur.execute(
-    "INSERT INTO admins (username, password_hash, created_at) VALUES (?, ?, ?)",
-    ("newusername", generate_password_hash("newpassword"), utc_now()),
+  "INSERT INTO admins (username, password_hash, created_at) VALUES (%s, %s, %s)",
+  ("newusername", generate_password_hash("newpassword"), utc_now()),
 )
 ```
 
@@ -147,15 +147,16 @@ cur.execute(
 - Python 3.11.4
 - Flask 3.0.3 (lightweight HTTP server)
 - Werkzeug 3.0.3 (password hashing)
-- SQLite (zero-configuration database)
+- PostgreSQL (managed production database)
 
 ---
 
 ## 🔒 Security Notes
 
 1. **Change default admin credentials** before deploying
-2. **Set `BAKERY_SECRET_KEY` environment variable:**
+2. **Set required environment variables:**
    ```powershell
+  $env:DATABASE_URL = "postgresql://<user>:<password>@<host>:5432/<database>"
    $env:BAKERY_SECRET_KEY = "your-super-secret-key-min-32-chars"
    ```
 3. **Use HTTPS** in production

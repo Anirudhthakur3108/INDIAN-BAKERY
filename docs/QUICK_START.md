@@ -6,7 +6,7 @@ A complete, production-ready bakery website with:
 - ✨ Beautiful responsive frontend (HTML/CSS/JavaScript)
 - 🔐 Admin dashboard with login & authentication
 - 📊 Full order management system
-- 🗄️ SQLite database with auto-initialization
+- 🗄️ PostgreSQL database with auto-initialization
 - 🚀 Flask REST API backend
 
 ---
@@ -26,6 +26,13 @@ python.exe -m pip install -r requirements.txt
 ```
 
 ### 3️⃣ Run the Backend Server
+
+Set environment variables first:
+
+```powershell
+$env:DATABASE_URL = "postgresql://<user>:<password>@<host>:5432/<database>"
+$env:BAKERY_SECRET_KEY = "very-long-secret-key-at-least-32-characters"
+```
 
 ```powershell
 python.exe app.py
@@ -143,7 +150,7 @@ Open: `backend/app.py` and find this line:
 
 ```python
 cur.execute(
-    "INSERT INTO admins (username, password_hash, created_at) VALUES (?, ?, ?)",
+  "INSERT INTO admins (username, password_hash, created_at) VALUES (%s, %s, %s)",
     ("admin", generate_password_hash("admin123"), utc_now()),  # ← Change "admin123"
 )
 ```
@@ -241,7 +248,7 @@ All files are organized in: `c:\Users\thaku\Dropbox\PC\Desktop\INDIAN BAKERY\`
 - Original files in Desktop (they're copied to INDIAN BAKERY folder)
 
 **Auto-created on first run:**
-- `backend/bakery.db` - The database file
+- `admins`, `menu_items`, `orders`, `order_items` tables in PostgreSQL
 
 ---
 
@@ -265,6 +272,7 @@ All files are organized in: `c:\Users\thaku\Dropbox\PC\Desktop\INDIAN BAKERY\`
 1. 🔐 **Change admin credentials** in `backend/app.py`
 2. 🔑 **Set environment variable:**
    ```powershell
+  $env:DATABASE_URL = "postgresql://<user>:<password>@<host>:5432/<database>"
    $env:BAKERY_SECRET_KEY = "very-long-secret-key-at-least-32-characters"
    ```
 3. 🚀 **Deploy to a real server** (Heroku, AWS, etc.)

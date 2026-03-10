@@ -1,18 +1,22 @@
 from __future__ import annotations
 
 import os
-import sqlite3
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from typing import Any
 
 from flask import Flask, jsonify, redirect, request, send_from_directory, session
+from psycopg import connect
+from psycopg.rows import dict_row
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent
-DB_PATH = BASE_DIR / "bakery.db"
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is required for PostgreSQL.")
 
 PUBLIC_FILES = {
     "index.html",
@@ -31,10 +35,8 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("BAKERY_SECRET_KEY", "change-this-in-production")
 
 
-def get_db() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+def get_db():
+    return connect(DATABASE_URL, row_factory=dict_row)
 
 
 def utc_now() -> str:
@@ -52,95 +54,95 @@ def admin_required(fn):
 
 
 def ensure_tables() -> None:
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS admins (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            created_at TEXT NOT NULL
-        )
-        """
-    )
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS menu_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            description TEXT NOT NULL,
-            price REAL NOT NULL,
-            category TEXT NOT NULL,
-            is_available INTEGER NOT NULL DEFAULT 1,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-        """
-    )
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS orders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            customer_name TEXT NOT NULL,
-            phone TEXT NOT NULL,
-            order_type TEXT NOT NULL,
-            pickup_date TEXT NOT NULL,
-            slot TEXT NOT NULL,
-            delivery_address TEXT,
-            notes TEXT,
-            status TEXT NOT NULL,
-            created_at TEXT NOT NULL
-        )
-        """
-    )
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS order_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id INTEGER NOT NULL,
-            menu_item_id INTEGER,
-            item_name_snapshot TEXT NOT NULL,
-            price_snapshot REAL NOT NULL,
-            qty INTEGER NOT NULL,
-            FOREIGN KEY(order_id) REFERENCES orders(id)
-        )
-        """
-    )
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS admins (
+                    id BIGSERIAL PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS menu_items (
+                    id BIGSERIAL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    price DOUBLE PRECISION NOT NULL,
+                    category TEXT NOT NULL,
+                    is_available BOOLEAN NOT NULL DEFAULT TRUE,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS orders (
+                    id BIGSERIAL PRIMARY KEY,
+                    customer_name TEXT NOT NULL,
+                    phone TEXT NOT NULL,
+                    order_type TEXT NOT NULL,
+                    pickup_date TEXT NOT NULL,
+                    slot TEXT NOT NULL,
+                    delivery_address TEXT,
+                    notes TEXT,
+                    status TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS order_items (
+                    id BIGSERIAL PRIMARY KEY,
+                    order_id BIGINT NOT NULL,
+                    menu_item_id BIGINT,
+                    item_name_snapshot TEXT NOT NULL,
+                    price_snapshot DOUBLE PRECISION NOT NULL,
+                    qty INTEGER NOT NULL,
+                    FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE,
+                    FOREIGN KEY(menu_item_id) REFERENCES menu_items(id) ON DELETE SET NULL
+                )
+                """
+            )
 
-    cur.execute("SELECT COUNT(*) AS count FROM admins")
-    admin_count = cur.fetchone()["count"]
-    if admin_count == 0:
-        cur.execute(
-            "INSERT INTO admins (username, password_hash, created_at) VALUES (?, ?, ?)",
-            ("admin", generate_password_hash("admin123"), utc_now()),
-        )
+            cur.execute("SELECT COUNT(*) AS count FROM admins")
+            admin_count = cur.fetchone()["count"]
+            if admin_count == 0:
+                cur.execute(
+                    "INSERT INTO admins (username, password_hash, created_at) VALUES (%s, %s, %s)",
+                    ("admin", generate_password_hash("admin123"), utc_now()),
+                )
 
-    cur.execute("SELECT COUNT(*) AS count FROM menu_items")
-    menu_count = cur.fetchone()["count"]
-    if menu_count == 0:
-        default_items = [
-            ("Sourdough Pav", "Natural fermentation with soft crumb for sliders and maska pairings.", 120, "Signature Breads"),
-            ("Jeera Focaccia", "Olive oil focaccia with roasted jeera and rock salt top.", 210, "Signature Breads"),
-            ("Multigrain Kulcha Loaf", "Healthy loaf with sesame, flax, and light methi hint.", 190, "Signature Breads"),
-            ("Rose Rasmalai Tres Leches", "Soft sponge with saffron milk soak and rose cream.", 260, "Cakes & Pastries"),
-            ("Dark Chocolate Orange Gateau", "Rich ganache with candied orange and sea salt.", 290, "Cakes & Pastries"),
-            ("Filter Coffee Opera Slice", "South Indian coffee syrup layered with almond sponge.", 240, "Cakes & Pastries"),
-            ("Motichoor Cheesecake Jar", "Baked cheesecake topped with tiny boondi crunch.", 200, "Indian Sweet Fusion"),
-            ("Gulkand Danish", "Flaky pastry filled with rose-petal preserve and nuts.", 170, "Indian Sweet Fusion"),
-            ("Kesar Peda Tart", "Buttery tart shell with saffron peda cream.", 190, "Indian Sweet Fusion"),
-        ]
-        now = utc_now()
-        cur.executemany(
-            """
-            INSERT INTO menu_items (name, description, price, category, is_available, created_at, updated_at)
-            VALUES (?, ?, ?, ?, 1, ?, ?)
-            """,
-            [(name, desc, price, category, now, now) for name, desc, price, category in default_items],
-        )
+            cur.execute("SELECT COUNT(*) AS count FROM menu_items")
+            menu_count = cur.fetchone()["count"]
+            if menu_count == 0:
+                default_items = [
+                    ("Sourdough Pav", "Natural fermentation with soft crumb for sliders and maska pairings.", 120, "Signature Breads"),
+                    ("Jeera Focaccia", "Olive oil focaccia with roasted jeera and rock salt top.", 210, "Signature Breads"),
+                    ("Multigrain Kulcha Loaf", "Healthy loaf with sesame, flax, and light methi hint.", 190, "Signature Breads"),
+                    ("Rose Rasmalai Tres Leches", "Soft sponge with saffron milk soak and rose cream.", 260, "Cakes & Pastries"),
+                    ("Dark Chocolate Orange Gateau", "Rich ganache with candied orange and sea salt.", 290, "Cakes & Pastries"),
+                    ("Filter Coffee Opera Slice", "South Indian coffee syrup layered with almond sponge.", 240, "Cakes & Pastries"),
+                    ("Motichoor Cheesecake Jar", "Baked cheesecake topped with tiny boondi crunch.", 200, "Indian Sweet Fusion"),
+                    ("Gulkand Danish", "Flaky pastry filled with rose-petal preserve and nuts.", 170, "Indian Sweet Fusion"),
+                    ("Kesar Peda Tart", "Buttery tart shell with saffron peda cream.", 190, "Indian Sweet Fusion"),
+                ]
+                now = utc_now()
+                cur.executemany(
+                    """
+                    INSERT INTO menu_items (name, description, price, category, is_available, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, TRUE, %s, %s)
+                    """,
+                    [(name, desc, price, category, now, now) for name, desc, price, category in default_items],
+                )
 
-    conn.commit()
-    conn.close()
+        conn.commit()
 
 
 def parse_json() -> dict[str, Any]:
@@ -152,7 +154,7 @@ def normalize_phone(phone: str) -> str:
     return "".join(ch for ch in phone if ch.isdigit())
 
 
-def group_menu_sections(items: list[sqlite3.Row]) -> list[dict[str, Any]]:
+def group_menu_sections(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     grouped: dict[str, list[dict[str, Any]]] = {}
     for row in items:
         grouped.setdefault(row["category"], []).append(
@@ -197,9 +199,10 @@ def login():
     if not username or not password:
         return jsonify({"error": "Username and password are required"}), 400
 
-    conn = get_db()
-    row = conn.execute("SELECT * FROM admins WHERE username = ?", (username,)).fetchone()
-    conn.close()
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM admins WHERE username = %s", (username,))
+            row = cur.fetchone()
 
     if not row or not check_password_hash(row["password_hash"], password):
         return jsonify({"error": "Invalid credentials"}), 401
@@ -229,20 +232,20 @@ def me():
 
 @app.get("/api/menu")
 def list_menu_public():
-    conn = get_db()
-    rows = conn.execute(
-        "SELECT * FROM menu_items WHERE is_available = 1 ORDER BY category, id"
-    ).fetchall()
-    conn.close()
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM menu_items WHERE is_available = TRUE ORDER BY category, id")
+            rows = cur.fetchall()
     return jsonify({"sections": group_menu_sections(rows)})
 
 
 @app.get("/api/admin/menu")
 @admin_required
 def list_menu_admin():
-    conn = get_db()
-    rows = conn.execute("SELECT * FROM menu_items ORDER BY category, id").fetchall()
-    conn.close()
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM menu_items ORDER BY category, id")
+            rows = cur.fetchall()
     return jsonify(
         {
             "items": [
@@ -281,18 +284,18 @@ def create_menu_item():
         return jsonify({"error": "price must be a non-negative number"}), 400
 
     now = utc_now()
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(
-        """
-        INSERT INTO menu_items (name, description, price, category, is_available, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
-        (name, description, price, category, 1 if is_available else 0, now, now),
-    )
-    conn.commit()
-    item_id = cur.lastrowid
-    conn.close()
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO menu_items (name, description, price, category, is_available, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+                """,
+                (name, description, price, category, is_available, now, now),
+            )
+            item_id = cur.fetchone()["id"]
+        conn.commit()
 
     return jsonify({"message": "Menu item created", "id": item_id}), 201
 
@@ -309,21 +312,21 @@ def update_menu_item(item_id: int):
         name = str(data.get("name", "")).strip()
         if not name:
             return jsonify({"error": "name cannot be empty"}), 400
-        updates.append("name = ?")
+        updates.append("name = %s")
         values.append(name)
 
     if "description" in data:
         description = str(data.get("description", "")).strip()
         if not description:
             return jsonify({"error": "description cannot be empty"}), 400
-        updates.append("description = ?")
+        updates.append("description = %s")
         values.append(description)
 
     if "category" in data:
         category = str(data.get("category", "")).strip()
         if not category:
             return jsonify({"error": "category cannot be empty"}), 400
-        updates.append("category = ?")
+        updates.append("category = %s")
         values.append(category)
 
     if "price" in data:
@@ -333,26 +336,25 @@ def update_menu_item(item_id: int):
                 raise ValueError
         except (TypeError, ValueError):
             return jsonify({"error": "price must be a non-negative number"}), 400
-        updates.append("price = ?")
+        updates.append("price = %s")
         values.append(price)
 
     if "isAvailable" in data:
-        updates.append("is_available = ?")
-        values.append(1 if bool(data.get("isAvailable")) else 0)
+        updates.append("is_available = %s")
+        values.append(bool(data.get("isAvailable")))
 
     if not updates:
         return jsonify({"error": "No valid fields provided"}), 400
 
-    updates.append("updated_at = ?")
+    updates.append("updated_at = %s")
     values.append(utc_now())
     values.append(item_id)
 
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(f"UPDATE menu_items SET {', '.join(updates)} WHERE id = ?", tuple(values))
-    conn.commit()
-    changed = cur.rowcount
-    conn.close()
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(f"UPDATE menu_items SET {', '.join(updates)} WHERE id = %s", tuple(values))
+            changed = cur.rowcount
+        conn.commit()
 
     if changed == 0:
         return jsonify({"error": "Menu item not found"}), 404
@@ -363,12 +365,11 @@ def update_menu_item(item_id: int):
 @app.delete("/api/admin/menu/<int:item_id>")
 @admin_required
 def delete_menu_item(item_id: int):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM menu_items WHERE id = ?", (item_id,))
-    conn.commit()
-    changed = cur.rowcount
-    conn.close()
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM menu_items WHERE id = %s", (item_id,))
+            changed = cur.rowcount
+        conn.commit()
 
     if changed == 0:
         return jsonify({"error": "Menu item not found"}), 404
@@ -424,49 +425,50 @@ def create_order():
 
         clean_items.append({"name": name, "qty": qty})
 
-    conn = get_db()
-    cur = conn.cursor()
-    created_at = utc_now()
-    cur.execute(
-        """
-        INSERT INTO orders
-        (customer_name, phone, order_type, pickup_date, slot, delivery_address, notes, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            customer_name,
-            phone,
-            order_type,
-            pickup_date,
-            slot,
-            delivery_address if order_type == "delivery" else None,
-            notes,
-            "new",
-            created_at,
-        ),
-    )
-    order_id = cur.lastrowid
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            created_at = utc_now()
+            cur.execute(
+                """
+                INSERT INTO orders
+                (customer_name, phone, order_type, pickup_date, slot, delivery_address, notes, status, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+                """,
+                (
+                    customer_name,
+                    phone,
+                    order_type,
+                    pickup_date,
+                    slot,
+                    delivery_address if order_type == "delivery" else None,
+                    notes,
+                    "new",
+                    created_at,
+                ),
+            )
+            order_id = cur.fetchone()["id"]
 
-    for item in clean_items:
-        menu_row = cur.execute(
-            "SELECT id, price FROM menu_items WHERE name = ? ORDER BY id DESC LIMIT 1",
-            (item["name"],),
-        ).fetchone()
+            for item in clean_items:
+                cur.execute(
+                    "SELECT id, price FROM menu_items WHERE name = %s ORDER BY id DESC LIMIT 1",
+                    (item["name"],),
+                )
+                menu_row = cur.fetchone()
 
-        menu_item_id = menu_row["id"] if menu_row else None
-        price_snapshot = float(menu_row["price"]) if menu_row else 0.0
+                menu_item_id = menu_row["id"] if menu_row else None
+                price_snapshot = float(menu_row["price"]) if menu_row else 0.0
 
-        cur.execute(
-            """
-            INSERT INTO order_items
-            (order_id, menu_item_id, item_name_snapshot, price_snapshot, qty)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (order_id, menu_item_id, item["name"], price_snapshot, item["qty"]),
-        )
+                cur.execute(
+                    """
+                    INSERT INTO order_items
+                    (order_id, menu_item_id, item_name_snapshot, price_snapshot, qty)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (order_id, menu_item_id, item["name"], price_snapshot, item["qty"]),
+                )
 
-    conn.commit()
-    conn.close()
+        conn.commit()
 
     return jsonify({"message": "Order created", "orderId": order_id}), 201
 
@@ -474,41 +476,41 @@ def create_order():
 @app.get("/api/admin/orders")
 @admin_required
 def list_orders_admin():
-    conn = get_db()
-    order_rows = conn.execute(
-        "SELECT * FROM orders ORDER BY created_at DESC"
-    ).fetchall()
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM orders ORDER BY created_at DESC")
+            order_rows = cur.fetchall()
 
-    orders: list[dict[str, Any]] = []
-    for row in order_rows:
-        item_rows = conn.execute(
-            "SELECT item_name_snapshot, price_snapshot, qty FROM order_items WHERE order_id = ?",
-            (row["id"],),
-        ).fetchall()
-        orders.append(
-            {
-                "id": row["id"],
-                "customerName": row["customer_name"],
-                "phone": row["phone"],
-                "orderType": row["order_type"],
-                "pickupDate": row["pickup_date"],
-                "slot": row["slot"],
-                "deliveryAddress": row["delivery_address"],
-                "notes": row["notes"],
-                "status": row["status"],
-                "createdAt": row["created_at"],
-                "items": [
+            orders: list[dict[str, Any]] = []
+            for row in order_rows:
+                cur.execute(
+                    "SELECT item_name_snapshot, price_snapshot, qty FROM order_items WHERE order_id = %s",
+                    (row["id"],),
+                )
+                item_rows = cur.fetchall()
+                orders.append(
                     {
-                        "name": item["item_name_snapshot"],
-                        "price": float(item["price_snapshot"]),
-                        "qty": item["qty"],
+                        "id": row["id"],
+                        "customerName": row["customer_name"],
+                        "phone": row["phone"],
+                        "orderType": row["order_type"],
+                        "pickupDate": row["pickup_date"],
+                        "slot": row["slot"],
+                        "deliveryAddress": row["delivery_address"],
+                        "notes": row["notes"],
+                        "status": row["status"],
+                        "createdAt": row["created_at"],
+                        "items": [
+                            {
+                                "name": item["item_name_snapshot"],
+                                "price": float(item["price_snapshot"]),
+                                "qty": item["qty"],
+                            }
+                            for item in item_rows
+                        ],
                     }
-                    for item in item_rows
-                ],
-            }
-        )
+                )
 
-    conn.close()
     return jsonify({"orders": orders})
 
 
@@ -522,12 +524,11 @@ def update_order_status(order_id: int):
     if status not in allowed:
         return jsonify({"error": f"status must be one of: {', '.join(sorted(allowed))}"}), 400
 
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE orders SET status = ? WHERE id = ?", (status, order_id))
-    conn.commit()
-    changed = cur.rowcount
-    conn.close()
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("UPDATE orders SET status = %s WHERE id = %s", (status, order_id))
+            changed = cur.rowcount
+        conn.commit()
 
     if changed == 0:
         return jsonify({"error": "Order not found"}), 404
@@ -535,6 +536,9 @@ def update_order_status(order_id: int):
     return jsonify({"message": "Order status updated"})
 
 
+ensure_tables()
+
+
 if __name__ == "__main__":
-    ensure_tables()
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)

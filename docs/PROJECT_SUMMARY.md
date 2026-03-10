@@ -27,7 +27,7 @@ INDIAN BAKERY/                          ← Main Project Folder
 │   ├── app.py                          ✓ Flask server (all APIs + database)
 │   ├── requirements.txt                ✓ Python dependencies
 │   ├── README.md                       ✓ Backend setup guide
-│   └── bakery.db                       ⭐ Auto-created on first run
+│   └── app.py                          ⭐ Uses PostgreSQL via DATABASE_URL
 │
 └── docs/                               ← Documentation
     ├── QUICK_START.md                  ✓ Quick start guide
@@ -123,7 +123,7 @@ python.exe app.py
 
 ✅ **Backend Features**
 - Flask REST API server
-- SQLite database with auto-initialization
+- PostgreSQL database with auto-initialization
 - Admin authentication with password hashing
 - Menu management (CRUD)
 - Order management with status tracking
@@ -150,6 +150,7 @@ python.exe app.py
 - [ ] Test all pages and features
 - [ ] Check mobile responsiveness
 - [ ] Set `BAKERY_SECRET_KEY` environment variable
+- [ ] Set `DATABASE_URL` environment variable
 - [ ] Deploy to production server
 
 ### Optional Enhancements

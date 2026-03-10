@@ -36,7 +36,7 @@ INDIAN BAKERY/
 │
 ├── backend/                            # Python Flask API server
 │   ├── app.py                          # Main Flask application
-│   │                                   # - Database initialization (SQLite)
+│   │                                   # - Database initialization (PostgreSQL)
 │   │                                   # - API routes (10+ endpoints)
 │   │                                   # - Authentication middleware
 │   │                                   # - Order processing
@@ -47,8 +47,7 @@ INDIAN BAKERY/
 │   │
 │   ├── README.md                       # Backend setup guide
 │   │
-│   └── bakery.db                       # SQLite database
-│                                       # (Auto-created on first run)
+│   └── README.md                       # Backend setup guide
 │
 └── README.md                           # This project's main documentation
 ```
@@ -157,22 +156,22 @@ Admin → Login (POST /api/auth/login)
 
 ```
 index.html
-├── Imports: ../css/styles.css
-├── Imports: ../js/template-config.js
-└── Imports: ../js/script.js
+├── Imports: /styles.css
+├── Imports: /template-config.js
+└── Imports: /script.js
     └── Fetches from: /api/menu (app.py)
 
 admin.html
-├── Imports: ../css/styles.css
-├── Imports: ../js/template-config.js
-├── Imports: ../js/script.js
-└── Imports: ../js/admin.js
+├── Imports: /styles.css
+├── Imports: /template-config.js
+├── Imports: /script.js
+└── Imports: /admin.js
     └── Fetches from: /api/auth/*, /api/admin/* (app.py)
 
 app.py
 ├── Serves: All HTML + CSS + JS files from FRONTEND_DIR
 ├── Provides: 10+ JSON API endpoints
-├── Manages: SQLite database
+├── Manages: PostgreSQL database
 └── Authenticates: Admin sessions
 ```
 
@@ -181,11 +180,12 @@ app.py
 ## Setup Checklist
 
 - [ ] Backend installed: `pip install -r backend/requirements.txt`
+- [ ] `DATABASE_URL` configured for PostgreSQL
 - [ ] Backend running: `python backend/app.py`
 - [ ] Frontend accessible: `http://127.0.0.1:5000/index.html`
 - [ ] Admin login works: `http://127.0.0.1:5000/admin.html`
 - [ ] Default credentials in code: `admin` / `admin123`
-- [ ] Database auto-created: `backend/bakery.db`
+- [ ] Database tables auto-created in PostgreSQL
 
 ---
 
